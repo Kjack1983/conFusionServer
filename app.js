@@ -3,7 +3,9 @@ let express = require('express');
 let path = require('path');
 let cookieParser = require('cookie-parser');
 let logger = require('morgan');
+const cors = require('cors');
 let mongoose = require('mongoose');
+const bodyParser = require('body-parser');
 
 let indexRouter = require('./routes/index');
 let usersRouter = require('./routes/users');
@@ -13,15 +15,15 @@ let promotionsRouter = require('./routes/promotionsRouter');
 
 const Dishes = require('./models/dishes');
 
-const url = 'mongodb://localhost:27017/consFusion';
-const connect = mongoose.connect(url);
-connect.then(db => {
-  console.log('The connection is established');
+// Create connection.
+const dbConnection = require('./connection/db-connection');
+require('dotenv').config() // this will allow us to use the env variable.
 
-})
-.catch(err => console.log);
-
+// Create express
 let app = express();
+
+//db connection
+dbConnection.connectToDb();
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -29,8 +31,12 @@ app.set('view engine', 'jade');
 
 app.use(logger('dev'));
 app.use(express.json());
+// fetch data from the request body.
+app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+// handle API that are coming from different origin. Avoid cross origin errors.
+app.use(cors());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
