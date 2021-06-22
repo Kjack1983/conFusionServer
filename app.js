@@ -13,7 +13,9 @@ let dishRouter = require('./routes/dishRouter');
 let leadersRouter = require('./routes/leadersRouter');
 let promotionsRouter = require('./routes/promotionsRouter');
 
+// Models
 const Dishes = require('./models/dishes');
+const Promotions = require('./models/promotions');
 
 // Create connection.
 const dbConnection = require('./connection/db-connection');
@@ -31,6 +33,7 @@ app.set('view engine', 'jade');
 
 app.use(logger('dev'));
 app.use(express.json());
+
 // fetch data from the request body.
 app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: false }));
