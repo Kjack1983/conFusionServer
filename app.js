@@ -40,6 +40,37 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 // handle API that are coming from different origin. Avoid cross origin errors.
 app.use(cors());
+
+const auth = (req, res, next) => {
+  // fetch headers authorization.
+  let authHeader = req.headers.authorization;
+
+  if (!authHeader) {
+    let error = new Error('You are not authenticated');
+    res.setHeader('WWW-authenticate', 'Basic');
+    error.status = 401;
+    return next(error);
+  }
+
+  let auth = new Buffer(authHeader.split(' ')[1], 'base64').toString().split(':');
+
+  // Destructure.
+  let [ username, password ] = auth;
+
+  // default username and password
+  if (username === 'admin' && password === 'password') {
+    next();
+  } else {
+    let error = new Error('You are not authenticated');
+    res.setHeader('WWW-authenticate', 'Basic');
+    error.status = 401;
+    return next(error);
+  }
+
+}
+
+app.use(auth);
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
