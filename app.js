@@ -3,6 +3,8 @@ let express = require('express');
 let path = require('path');
 let cookieParser = require('cookie-parser');
 let logger = require('morgan');
+let session = require('express-session');
+var FileStore = require('session-file-store')(session);
 const cors = require('cors');
 let mongoose = require('mongoose');
 const bodyParser = require('body-parser');
@@ -41,16 +43,23 @@ app.use(express.urlencoded({ extended: false }));
 // handle API that are coming from different origin. Avoid cross origin errors.
 //app.use(cors());
 
-app.use(cookieParser('12345-67890-09876-54321'));
+//app.use(cookieParser('12345-67890-09876-54321'));
+
+app.use(session({
+  name: 'session-id',
+  secret: '12345-67890-09876-54321',
+  saveUninitialized: false,
+  resave: false,
+  store: new FileStore()
+}));
 
 const auth = (req, res, next) => {
-  
-  let { signedCookies, headers } = req;
+  let { session, headers } = req;
 
   // fetch headers authorization.
   let authHeader = headers.authorization;
 
-  if (!signedCookies.user) {
+  if (!req.session.user) {
     if (!authHeader) {
       let error = new Error('You are not authenticated');
       res.setHeader('WWW-authenticate', 'Basic');
@@ -65,7 +74,8 @@ const auth = (req, res, next) => {
   
     // default username and password
     if (username === 'admin' && password === 'password') {
-      res.cookie('user','admin', { signed: true });
+      //res.cookie('user','admin', { signed: true });
+      req.session.user = 'admin';
       next();
     } else {
       let error = new Error('You are not authenticated');
@@ -74,7 +84,8 @@ const auth = (req, res, next) => {
       return next(error);
     }
   } else {
-    if (req.signedCookies.user === 'admin') {
+    if (req.session.user === 'admin') {
+      console.log('req.session: ',req.session);
       next();
     }
     else {
