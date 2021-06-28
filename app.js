@@ -37,36 +37,52 @@ app.use(express.json());
 // fetch data from the request body.
 app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
+
 // handle API that are coming from different origin. Avoid cross origin errors.
-app.use(cors());
+//app.use(cors());
+
+app.use(cookieParser('12345-67890-09876-54321'));
 
 const auth = (req, res, next) => {
+  
+  let { signedCookies, headers } = req;
+
   // fetch headers authorization.
-  let authHeader = req.headers.authorization;
+  let authHeader = headers.authorization;
 
-  if (!authHeader) {
-    let error = new Error('You are not authenticated');
-    res.setHeader('WWW-authenticate', 'Basic');
-    error.status = 401;
-    return next(error);
-  }
-
-  let auth = new Buffer(authHeader.split(' ')[1], 'base64').toString().split(':');
-
-  // Destructure.
-  let [ username, password ] = auth;
-
-  // default username and password
-  if (username === 'admin' && password === 'password') {
-    next();
+  if (!signedCookies.user) {
+    if (!authHeader) {
+      let error = new Error('You are not authenticated');
+      res.setHeader('WWW-authenticate', 'Basic');
+      error.status = 401;
+      return next(error);
+    }
+  
+    let auth = new Buffer.from(authHeader.split(' ')[1], 'base64').toString().split(':');
+  
+    // Destructure.
+    let [ username, password ] = auth;
+  
+    // default username and password
+    if (username === 'admin' && password === 'password') {
+      res.cookie('user','admin', { signed: true });
+      next();
+    } else {
+      let error = new Error('You are not authenticated');
+      res.setHeader('WWW-authenticate', 'Basic');
+      error.status = 401;
+      return next(error);
+    }
   } else {
-    let error = new Error('You are not authenticated');
-    res.setHeader('WWW-authenticate', 'Basic');
-    error.status = 401;
-    return next(error);
+    if (req.signedCookies.user === 'admin') {
+      next();
+    }
+    else {
+      let error = new Error('You are not authenticated');
+      error.status = 401;
+      return next(error);
+    }
   }
-
 }
 
 app.use(auth);
