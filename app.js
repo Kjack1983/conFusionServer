@@ -53,39 +53,17 @@ app.use(session({
   store: new FileStore()
 }));
 
+app.use('/', indexRouter);
+app.use('/users', usersRouter);
+
 const auth = (req, res, next) => {
   let { session, headers } = req;
-
-  // fetch headers authorization.
-  let authHeader = headers.authorization;
-
-  if (!req.session.user) {
-    if (!authHeader) {
+  if (!req.session.user) {    
       let error = new Error('You are not authenticated');
-      res.setHeader('WWW-authenticate', 'Basic');
       error.status = 401;
       return next(error);
-    }
-  
-    let auth = new Buffer.from(authHeader.split(' ')[1], 'base64').toString().split(':');
-  
-    // Destructure.
-    let [ username, password ] = auth;
-  
-    // default username and password
-    if (username === 'admin' && password === 'password') {
-      //res.cookie('user','admin', { signed: true });
-      req.session.user = 'admin';
-      next();
-    } else {
-      let error = new Error('You are not authenticated');
-      res.setHeader('WWW-authenticate', 'Basic');
-      error.status = 401;
-      return next(error);
-    }
   } else {
-    if (req.session.user === 'admin') {
-      console.log('req.session: ',req.session);
+    if (req.session.user === 'authenticated') {
       next();
     }
     else {
@@ -100,8 +78,6 @@ app.use(auth);
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
 app.use('/api', dishRouter);
 app.use('/api', leadersRouter);
 app.use('/api', promotionsRouter);
