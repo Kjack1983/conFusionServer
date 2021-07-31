@@ -9,6 +9,7 @@ const FileStore = require('session-file-store')(session);
 // passport library.
 const passport = require('passport');
 const authenticate = require('./authenticate');
+const config = require('./config');
 
 const cors = require('cors');
 const mongoose = require('mongoose');
@@ -51,33 +52,10 @@ app.use(express.urlencoded({
 //app.use(cors());
 
 //app.use(cookieParser('12345-67890-09876-54321'));
-
-app.use(session({
-	name: 'session-id',
-	secret: '12345-67890-09876-54321',
-	saveUninitialized: false,
-	resave: false,
-	store: new FileStore()
-}));
-
 app.use(passport.initialize());
-app.use(passport.session());
-
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 
-const auth = (req, res, next) => {
-	let { user } = req;
-	if (!user) {
-		let error = new Error('You are not authenticated');
-		error.status = 403;
-		return next(error);
-	} else {
-		next();
-	}
-}
-
-app.use(auth);
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/api', dishRouter);

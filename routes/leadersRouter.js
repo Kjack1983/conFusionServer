@@ -1,7 +1,8 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
-const Leaders = require('../models/leaders');
+const Leaders = require('../models/leaders')
+const authenticate = require('../authenticate');
 
 const leadersRouter = express.Router();
 leadersRouter.use(bodyParser.json());
@@ -16,7 +17,7 @@ leadersRouter.route('/leaders')
     }, error => next(error))
     .catch(error => next(error));
 })
-.post((req, res, next) => {
+.post(authenticate.verifyUser, (req, res, next) => {
     Leaders.create(req.body)
     .then(leader => {
         res.statusCode = 200;
@@ -25,11 +26,11 @@ leadersRouter.route('/leaders')
     }, error => next(error))
     .catch(error => next(error));   
 })
-.put((req, res, next) => {
+.put(authenticate.verifyUser, (req, res, next) => {
     res.end('Put operation not supported on leaders');
     res.statusCode = 403; // not supported.
 })
-.delete((req, res, next) => {
+.delete(authenticate.verifyUser, (req, res, next) => {
     Leaders.remove({})
     .then(response => {
         res.statusCode = 200;
@@ -56,11 +57,11 @@ leadersRouter.route('/leaders/:leaderId')
     }, error => next(error))
     .catch(error => next(error))
 })
-.post((req, res, next) => {
+.post(authenticate.verifyUser, (req, res, next) => {
     res.end('Post operation not supported on /leaders/' + req.params.leaderId);
     res.statusCode = 403; // not supported.
 })
-.put((req, res, next) => {
+.put(authenticate.verifyUser, (req, res, next) => {
     Leaders.findByIdAndUpdate(req.params.leaderId, {
         $set: req.body
     }, { new: true })
@@ -71,7 +72,7 @@ leadersRouter.route('/leaders/:leaderId')
     }, error => next(error))
     .catch(error => next(error));
 })
-.delete((req, res, next) => {
+.delete(authenticate.verifyUser, (req, res, next) => {
     Leaders.findByIdAndRemove(req.params.leaderId)
     .then(response => {
         res.statusCode = 200;
