@@ -10,14 +10,13 @@ exports.local = passport.use(new LocalStrategy(User.authenticate()));
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
-exports.getToken = function(user) {
-    return jwt.sign(
-        user, 
-        config.secretKey,
-        {
-            expiresIn: 3600
-        }
-    );
+exports.getToken = user => {
+	return jwt.sign(
+		user,
+		config.secretKey, {
+			expiresIn: 3600
+		}
+	);
 };
 
 var opts = {};
@@ -25,19 +24,36 @@ opts.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
 opts.secretOrKey = config.secretKey;
 
 exports.jwtPassport = passport.use(new JwtStrategy(opts, (jwt_payload, done) => {
-    console.log("JWT payload: ", jwt_payload);
-    User.findOne({_id: jwt_payload._id}, (err, user) => {
-        if (err) {
-            return done(err, false);
-        }
-        else if (user) {
-            return done(null, user);
-        }
-        else {
-            return done(null, false);
-        }
-    });
+	User.findOne({
+		_id: jwt_payload._id
+	}, (err, user) => {
+		if (err) {
+			return done(err, false);
+		} else if (user) {
+			return done(null, user);
+		} else {
+			return done(null, false);
+		}
+	});
 }));
 
+exports.verifyAdmin = function (req, res, next) {
+	let { user: { _id,} } = req;
 
-exports.verifyUser = passport.authenticate('jwt', {session: false});
+	// find user by id.
+	User.findById(_id)
+	.then(user => {
+		if (user.admin) {
+			next();
+		} else {
+			const error = new Error('You are not authorized to perform this operation!');
+            error.status = 403;
+            return next(error);
+		}
+	}, error => next(error))
+	.catch(error => next(error))
+}
+
+exports.verifyUser = passport.authenticate('jwt', {
+	session: false
+});

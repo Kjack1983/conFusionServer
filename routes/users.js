@@ -8,14 +8,28 @@ const router = express.Router();
 router.use(bodyParser.json());
 
 /* GET users listing. */
-router.get('/', function (req, res, next) {
-	res.send('respond with a resource');
+router.get('/', authenticate.verifyUser, (req, res, next) => {
+	const {user: {_id, admin} } = req; 
+	User.findById(_id).then((user, err) => {
+		if (user.admin) {
+			//console.log('USER:  >>>>', User);
+			User.find({}).then(users => {
+				res.statusCode = 200;
+				res.setHeader('Content-Type', 'application/json');
+				res.json(users);
+			}, err => next(err))
+			.catch(err => next(err))
+		} else {
+			res.statusCode = 403;
+			res.setHeader('Content-Type', 'application/json');
+			res.json({error: 'You are not authorized for this operation'});
+		}
+	}, err => next(err))
+	.catch(err => next(err))
 });
 
 router.post('/signup', (req, res, next) => {
-	User.register(new User({
-		username: req.body.username 
-	}), 
+	User.register(new User({ username: req.body.username }), 
 		req.body.password, (error, user) => {
 		if (error) {
 			res.statusCode = 500;
