@@ -38,7 +38,10 @@ exports.jwtPassport = passport.use(new JwtStrategy(opts, (jwt_payload, done) => 
 }));
 
 exports.verifyAdmin = function (req, res, next) {
-	let { user: { _id,} } = req;
+	
+	console.log(req.user);
+	
+	let { user: { _id} } = req;
 
 	// find user by id.
 	User.findById(_id)

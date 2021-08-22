@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const Dishes = require('../models/dishes');
+const User = require('../models/user');
 const authenticate = require('../authenticate');
 
 const dishRouter = express.Router();
@@ -114,6 +115,7 @@ dishRouter.route('/dishes/:dishId/comments')
             }, (err) => next(err));
         }
         else {
+            console.log('We are on error');
             err = new Error('Dish ' + req.params.dishId + ' not found');
             err.status = 404;
             return next(err);
@@ -178,25 +180,38 @@ dishRouter.route('/dishes/:dishId/comments/:commentId')
         + '/comments/' + req.params.commentId);
 })
 .put(authenticate.verifyUser, (req, res, next) => {
+
+    // todo must check those routes.. update and delete for tomorrow.
+    console.log(req.user);
     Dishes.findById(req.params.dishId)
     .then((dish) => {
         if (dish != null && dish.comments.id(req.params.commentId) != null) {
-            if (req.body.rating) {
-                dish.comments.id(req.params.commentId).rating = req.body.rating;
-            }
-            if (req.body.comment) {
-                dish.comments.id(req.params.commentId).comment = req.body.comment;                
-            }
-            dish.save()
-            .then((dish) => {
-                Dishes.findById(dish._id)
-                .populate('comments.author')
-                .then(dish => {
-                    res.statusCode = 200;
-                    res.setHeader('Content-Type', 'application/json');
-                    res.json(dish);
-                });
-            }, (err) => next(err));
+            let { body: { rating, comment }} = req;
+
+            // dettach author id from the comment
+            let {author: {_id}} = dish.comments.id(req.params.commentId);
+
+            User.findById(_id).then(user => {
+                if (user) {
+                    if (req.body.rating) {
+                        dish.comments.id(req.params.commentId).rating = rating;
+                    }
+                    if (req.body.comment) {
+                        dish.comments.id(req.params.commentId).comment = comment;                
+                    }
+                    dish.save()
+                    .then((dish) => {
+                        Dishes.findById(dish._id)
+                        .populate('comments.author')
+                        .then(dish => {
+                            res.statusCode = 200;
+                            res.setHeader('Content-Type', 'application/json');
+                            res.json(dish);
+                        });
+                    }, (err) => next(err));
+                }
+            }, err => next(err))
+            .catch(err => next(err))
         }
         else if (dish == null) {
             err = new Error('Dish ' + req.params.dishId + ' not found');

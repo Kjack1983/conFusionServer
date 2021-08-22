@@ -12,7 +12,6 @@ router.get('/', authenticate.verifyUser, (req, res, next) => {
 	const {user: {_id, admin} } = req; 
 	User.findById(_id).then((user, err) => {
 		if (user.admin) {
-			//console.log('USER:  >>>>', User);
 			User.find({}).then(users => {
 				res.statusCode = 200;
 				res.setHeader('Content-Type', 'application/json');
