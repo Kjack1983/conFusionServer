@@ -50,8 +50,8 @@ exports.verifyAdmin = function (req, res, next) {
 			next();
 		} else {
 			const error = new Error('You are not authorized to perform this operation!');
-            error.status = 403;
-            return next(error);
+			error.status = 403;
+			return next(error);
 		}
 	}, error => next(error))
 	.catch(error => next(error))

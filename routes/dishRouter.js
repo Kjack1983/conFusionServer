@@ -209,6 +209,10 @@ dishRouter.route('/dishes/:dishId/comments/:commentId')
                             res.json(dish);
                         });
                     }, (err) => next(err));
+                } else {
+                    err = new Error('You are not Authorized to change those comments');
+                    err.status = 403;
+                    return next(err);
                 }
             }, err => next(err))
             .catch(err => next(err))
