@@ -20,6 +20,7 @@ const usersRouter = require('./routes/users');
 const dishRouter = require('./routes/dishRouter');
 const leadersRouter = require('./routes/leadersRouter');
 const promotionsRouter = require('./routes/promotionsRouter');
+const uploadRouter = require('./routes/uploadRouter');
 
 // Models
 const Dishes = require('./models/dishes');
@@ -31,6 +32,14 @@ require('dotenv').config() // this will allow us to use the env variable.
 
 // Create express
 let app = express();
+
+/* app.all('*', (req, res, next) => {
+	if(req.secure) {
+		return next();
+	} else {
+		res.redirect(307, 'https://' + req.hostname + ':' + app.get('secPort') + req.url);
+	}
+}) */
 
 //db connection
 dbConnection.connectToDb();
@@ -61,10 +70,10 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/api', dishRouter);
 app.use('/api', leadersRouter);
 app.use('/api', promotionsRouter);
+app.use('/api', uploadRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
-	console.log('req >>>>', req);
 	next(createError(404));
 });
 

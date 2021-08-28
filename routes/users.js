@@ -3,12 +3,12 @@ const bodyParser = require('body-parser');
 const User = require('../models/user');
 const passport = require('passport');
 let authenticate = require('../authenticate');
-
+const cors = require('./cors');
 const router = express.Router();
 router.use(bodyParser.json());
 
 /* GET users listing. */
-router.get('/', authenticate.verifyUser, (req, res, next) => {
+router.get('/', cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
 	const {user: {_id, admin} } = req; 
 	User.findById(_id).then((user, err) => {
 		if (user.admin) {
@@ -27,7 +27,7 @@ router.get('/', authenticate.verifyUser, (req, res, next) => {
 	.catch(err => next(err))
 });
 
-router.post('/signup', (req, res, next) => {
+router.post('/signup', cors.corsWithOptions, (req, res, next) => {
 	User.register(new User({ username: req.body.username }), 
 		req.body.password, (error, user) => {
 		if (error) {
@@ -73,7 +73,7 @@ router.post('/login', passport.authenticate('local'),(req, res) => {
 	});
 });
 
-router.get('/logout', (req, res, next) => {
+router.get('/logout', cors.corsWithOptions, (req, res, next) => {
 	if (req.session) {
 		req.session.destroy();
 		res.clearCookie('session-id');
